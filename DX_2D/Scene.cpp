@@ -1,9 +1,8 @@
 #include "Device.h"
 
 ID3D11Buffer* vertexBuffer = NULL;
-ID3D11Buffer* vertexBuffer2 = NULL;
 ID3D11InputLayout* inputLatout = NULL;
-
+ID3D11RasterizerState* rs_FrameMode = NULL;
 struct Vertex
 {
 	Vector3 Position;
@@ -34,30 +33,27 @@ D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 
 void InitScene()
 {
-	Vertex vertices[3];
-	vertices[0].Position = Vector3(0.0f, 0.0f, 0.0f);
-	vertices[1].Position = Vector3(-0.5f, 0.5f, 0.0f);
-	vertices[2].Position = Vector3(0.5f, 0.5f, 0.0f);
+	Vertex vertices[6];
+	vertices[0].Position = Vector3(-0.5f, -0.5f, 0.0f);
+	vertices[1].Position = Vector3(-0.5f, +0.5f, 0.0f);
+	vertices[2].Position = Vector3(+0.5f, -0.5f, 0.0f);
+	vertices[3].Position = Vector3(+0.5f, -0.5f, 0.0f);
+	vertices[4].Position = Vector3(-0.5f, +0.5f, 0.0f);
+	vertices[5].Position = Vector3(+0.5f, +0.5f, 0.0f);
 
 	vertices[0].Color = D3DXCOLOR(1, 0, 0, 1);
 	vertices[1].Color = D3DXCOLOR(0, 1, 0, 1);
 	vertices[2].Color = D3DXCOLOR(0, 0, 1, 1);
+	vertices[3].Color = D3DXCOLOR(0, 0, 1, 1);
+	vertices[4].Color = D3DXCOLOR(0, 1, 0, 1);
+	vertices[5].Color = D3DXCOLOR(1, 0, 0, 1);
 
-	Vertex vertices2[3];
-	vertices2[0].Position = Vector3(0.0f, 0.0f, 0.0f);
-	vertices2[1].Position = Vector3(0.5f, -0.5f, 0.0f);
-	vertices2[2].Position = Vector3(-0.5f, -0.5f, 0.0f);
-			
-	vertices2[0].Color = D3DXCOLOR(1, 0, 0, 1);
-	vertices2[1].Color = D3DXCOLOR(0, 1, 0, 1);
-	vertices2[2].Color = D3DXCOLOR(0, 0, 1, 1);
-	
 	//Create VertexBuffer 1
 	{
 		D3D11_BUFFER_DESC desc;
 		ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 		desc.Usage = D3D11_USAGE_DEFAULT;				
-		desc.ByteWidth = sizeof(Vertex) * 3;			
+		desc.ByteWidth = sizeof(Vertex) * 6;			
 		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;		
 
 		D3D11_SUBRESOURCE_DATA data;
@@ -65,22 +61,6 @@ void InitScene()
 		data.pSysMem = vertices; 
 
 		HRESULT hr = Device->CreateBuffer(&desc, &data, &vertexBuffer);
-		assert(SUCCEEDED(hr));
-	}
-
-	//Create VertexBuffer2
-	{
-		D3D11_BUFFER_DESC desc;
-		ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-		desc.Usage = D3D11_USAGE_DEFAULT;				
-		desc.ByteWidth = sizeof(Vertex) * 3;			
-		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;		
-
-		D3D11_SUBRESOURCE_DATA data;
-		ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
-		data.pSysMem = vertices2;
-
-		HRESULT hr = Device->CreateBuffer(&desc, &data, &vertexBuffer2);
 		assert(SUCCEEDED(hr));
 	}
 
@@ -95,16 +75,32 @@ void InitScene()
 		);
 		assert(SUCCEEDED(hr));
 	}
+
+	//RasterizerState
+	{
+		D3D11_RASTERIZER_DESC desc;
+		ZeroMemory(&desc, sizeof(D3D11_RASTERIZER_DESC));
+		desc.FillMode = D3D11_FILL_WIREFRAME;	// 그려주는 방식 (선, 채우기)
+		desc.CullMode = D3D11_CULL_BACK;		// 그림을 자르는 방식 (앞, 뒤)
+
+		HRESULT hr = Device->CreateRasterizerState(&desc, &rs_FrameMode);
+		assert(SUCCEEDED(hr));
+	}
 }
 
 void DestroyScene()
 {
 	inputLatout->Release();
 	vertexBuffer->Release();
-	vertexBuffer2->Release();
+	rs_FrameMode->Release();
 }
 
-void Update() {}
+bool Wirte = false;
+void Update() 
+{
+	if (GetAsyncKeyState('1') & 0x8001)
+		Wirte = !Wirte;
+}
 
 void Render()
 {
@@ -118,11 +114,9 @@ void Render()
 		DeviceContext->IASetInputLayout(inputLatout);
 		DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		DeviceContext->Draw(3, 0);
 
-		/*-----2번째 Buffer-----*/
-		DeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer2, &stride, &offset);
-		DeviceContext->Draw(3, 0);
+		DeviceContext->RSSetState(Wirte ? rs_FrameMode : NULL);
+		DeviceContext->Draw(6, 0);
 	}
 	SwapChain->Present(0, 0); //백퍼에 위에 내용 보냄
 }
