@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "Device.h"
 
 //1
@@ -33,6 +34,8 @@ ID3D11VertexShader* VertexShader = nullptr;
 ID3D11PixelShader* PixelShader = nullptr;
 ID3D10Blob* VsBlob = nullptr;
 ID3D10Blob* PsBlob = nullptr;
+
+Keyboard* Key = nullptr;
 
 void InitWindow(HINSTANCE hInstance, int nCmdShow)
 {
@@ -224,6 +227,8 @@ WPARAM Running()
 {
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
+	
+	Key = new Keyboard();
 
 	InitScene();
 	while (true)
@@ -243,6 +248,9 @@ WPARAM Running()
 		}
 	}
 	DestroyScene();
+
+	delete Key;
+	Key = nullptr;
 
     return msg.wParam;
 }

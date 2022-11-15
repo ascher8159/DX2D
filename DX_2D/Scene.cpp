@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "Device.h"
 
 ID3D11Buffer* vertexBuffer = NULL;
@@ -82,7 +83,6 @@ void InitScene()
 		ZeroMemory(&desc, sizeof(D3D11_RASTERIZER_DESC));
 		desc.FillMode = D3D11_FILL_WIREFRAME;	// 그려주는 방식 (선, 채우기)
 		desc.CullMode = D3D11_CULL_BACK;		// 그림을 자르는 방식 (앞, 뒤)
-
 		HRESULT hr = Device->CreateRasterizerState(&desc, &rs_FrameMode);
 		assert(SUCCEEDED(hr));
 	}
@@ -98,7 +98,8 @@ void DestroyScene()
 bool Wirte = false;
 void Update() 
 {
-	if (GetAsyncKeyState('1') & 0x8001)
+	//if (GetAsyncKeyState('1') & 0x8001)
+	if(Key->Toggle('1'))
 		Wirte = !Wirte;
 }
 
