@@ -32,9 +32,9 @@ D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 	}
 };
 
+Vertex vertices[6];
 void InitScene()
 {
-	Vertex vertices[6];
 	vertices[0].Position = Vector3(-0.5f, -0.5f, 0.0f);
 	vertices[1].Position = Vector3(-0.5f, +0.5f, 0.0f);
 	vertices[2].Position = Vector3(+0.5f, -0.5f, 0.0f);
@@ -53,9 +53,15 @@ void InitScene()
 	{
 		D3D11_BUFFER_DESC desc;
 		ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-		desc.Usage = D3D11_USAGE_DEFAULT;				
 		desc.ByteWidth = sizeof(Vertex) * 6;			
 		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;		
+		
+		//GUP
+		//desc.Usage = D3D11_USAGE_DEFAULT;				
+		
+		//CPU
+		desc.Usage = D3D11_USAGE_DYNAMIC;	
+		desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
 
 		D3D11_SUBRESOURCE_DATA data;
 		ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
@@ -99,8 +105,44 @@ bool Wirte = false;
 void Update() 
 {
 	//if (GetAsyncKeyState('1') & 0x8001)
-	if(Key->Toggle('1'))
-		Wirte = !Wirte;
+	if(Key->Toggle('1')) Wirte = !Wirte;
+
+	if (Key->Press('A'))
+	{
+		for(int i =0 ; i <= 5 ; i++)
+			vertices[i].Position.x -= 1e-4f; 
+	}
+	else if (Key->Press('D'))
+	{
+		for (int i = 0; i <= 5; i++)
+			vertices[i].Position.x += 1e-4f; 
+	}
+
+	if (Key->Press('W'))
+	{
+		for (int i = 0; i <= 5; i++)
+			vertices[i].Position.y += 1e-4f;
+	}
+	else if (Key->Press('S'))
+	{
+		for (int i = 0; i <= 5; i++)
+
+			vertices[i].Position.y -= 1e-4f;
+	}
+	
+	// 정점 정보를 다시 전달 (Subresource 고쳐 쓰는 경우) 
+	// 직접 쉐이더에 값을 넣어줌(GPU방식)
+	//DeviceContext->UpdateSubresource(vertexBuffer, 0, nullptr, vertices, sizeof(Vertex) * 6, 0);
+	
+	// 잠시 Subresouce 값 멈추고 다시 셋팅 (CPU방식)
+	D3D11_MAPPED_SUBRESOURCE subResouce;
+	DeviceContext->Map(vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &subResouce);
+	{
+		//메모리 카피(저장 받을 Subresource, 복사할 시작위치, 크기)
+		memcpy(subResouce.pData, vertices, sizeof(Vertex) * 6);
+	}
+	DeviceContext->Unmap(vertexBuffer, 0);
+
 }
 
 void Render()
