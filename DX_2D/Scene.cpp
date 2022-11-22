@@ -2,8 +2,10 @@
 #include "Device.h"
 
 ID3D11Buffer* vertexBuffer = NULL;
+ID3D11Buffer* IndexBuffer = NULL;
 ID3D11InputLayout* inputLatout = NULL;
 ID3D11RasterizerState* rs_FrameMode = NULL;
+
 struct Vertex
 {
 	Vector3 Position;
@@ -32,34 +34,26 @@ D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 	}
 };
 
-Vertex vertices[6];
+Vertex vertices[4];
+
 void InitScene()
 {
-	vertices[0].Position = Vector3(-0.5f, -0.5f, 0.0f);
-	vertices[1].Position = Vector3(-0.5f, +0.5f, 0.0f);
-	vertices[2].Position = Vector3(+0.5f, -0.5f, 0.0f);
-	vertices[3].Position = Vector3(+0.5f, -0.5f, 0.0f);
-	vertices[4].Position = Vector3(-0.5f, +0.5f, 0.0f);
-	vertices[5].Position = Vector3(+0.5f, +0.5f, 0.0f);
-
-	vertices[0].Color = D3DXCOLOR(1, 0, 0, 1);
-	vertices[1].Color = D3DXCOLOR(0, 1, 0, 1);
-	vertices[2].Color = D3DXCOLOR(0, 0, 1, 1);
-	vertices[3].Color = D3DXCOLOR(0, 0, 1, 1);
-	vertices[4].Color = D3DXCOLOR(0, 1, 0, 1);
-	vertices[5].Color = D3DXCOLOR(1, 0, 0, 1);
-
-	//Create VertexBuffer 1
+	//VertexBuffer Setting & Create VertexBuffer
 	{
+		vertices[0].Position = Vector3(-0.5f, -0.5f, 0.0f); //왼 아래
+		vertices[1].Position = Vector3(-0.5f, +0.5f, 0.0f); //왼 위
+		vertices[2].Position = Vector3(+0.5f, -0.5f, 0.0f); //우 아래
+		vertices[3].Position = Vector3(+0.5f, +0.5f, 0.0f); //우 위
+
+		vertices[0].Color = D3DXCOLOR(1, 0, 0, 1);
+		vertices[1].Color = D3DXCOLOR(0, 1, 0, 1);
+		vertices[2].Color = D3DXCOLOR(0, 0, 1, 1);
+		vertices[3].Color = D3DXCOLOR(0, 1, 1, 1);
+
 		D3D11_BUFFER_DESC desc;
 		ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-		desc.ByteWidth = sizeof(Vertex) * 6;			
+		desc.ByteWidth = sizeof(Vertex) * 4;			
 		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;		
-		
-		//GUP
-		//desc.Usage = D3D11_USAGE_DEFAULT;				
-		
-		//CPU
 		desc.Usage = D3D11_USAGE_DYNAMIC;	
 		desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
 
@@ -68,6 +62,26 @@ void InitScene()
 		data.pSysMem = vertices; 
 
 		HRESULT hr = Device->CreateBuffer(&desc, &data, &vertexBuffer);
+		assert(SUCCEEDED(hr));
+	}
+
+	// Index Buffer & IndexBuffer Setting
+	{
+		// - 값을 안넣기위한 unsigned int
+		UINT indices[6] = { 0, 1 ,2 ,2 ,1 ,3 }; 
+
+		//Create indexBuffer
+		D3D11_BUFFER_DESC desc;
+		ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+		desc.Usage = D3D11_USAGE_IMMUTABLE;  // GPU, CPU 에서 수정 못하게 막기
+		desc.ByteWidth = sizeof(UINT) * 6;
+		desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+		D3D11_SUBRESOURCE_DATA data;
+		ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+		data.pSysMem = indices;
+
+		HRESULT hr = Device->CreateBuffer(&desc, &data, &IndexBuffer);
 		assert(SUCCEEDED(hr));
 	}
 
@@ -98,6 +112,7 @@ void DestroyScene()
 {
 	inputLatout->Release();
 	vertexBuffer->Release();
+	IndexBuffer->Release();
 	rs_FrameMode->Release();
 }
 
@@ -109,40 +124,35 @@ void Update()
 
 	if (Key->Press('A'))
 	{
-		for(int i =0 ; i <= 5 ; i++)
+		for(int i =0 ; i < ARRAYSIZE(vertices) ; i++)
 			vertices[i].Position.x -= 1e-4f; 
 	}
 	else if (Key->Press('D'))
 	{
-		for (int i = 0; i <= 5; i++)
+		for (int i = 0; i < ARRAYSIZE(vertices); i++)
 			vertices[i].Position.x += 1e-4f; 
 	}
 
 	if (Key->Press('W'))
 	{
-		for (int i = 0; i <= 5; i++)
+		for (int i = 0; i < ARRAYSIZE(vertices); i++)
 			vertices[i].Position.y += 1e-4f;
 	}
 	else if (Key->Press('S'))
 	{
-		for (int i = 0; i <= 5; i++)
-
+		for (int i = 0; i < ARRAYSIZE(vertices); i++)
 			vertices[i].Position.y -= 1e-4f;
 	}
 	
-	// 정점 정보를 다시 전달 (Subresource 고쳐 쓰는 경우) 
-	// 직접 쉐이더에 값을 넣어줌(GPU방식)
-	//DeviceContext->UpdateSubresource(vertexBuffer, 0, nullptr, vertices, sizeof(Vertex) * 6, 0);
 	
-	// 잠시 Subresouce 값 멈추고 다시 셋팅 (CPU방식)
+	// Subresouce (CPU방식)
 	D3D11_MAPPED_SUBRESOURCE subResouce;
 	DeviceContext->Map(vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &subResouce);
 	{
 		//메모리 카피(저장 받을 Subresource, 복사할 시작위치, 크기)
-		memcpy(subResouce.pData, vertices, sizeof(Vertex) * 6);
+		memcpy(subResouce.pData, vertices, sizeof(Vertex) * 4);
 	}
 	DeviceContext->Unmap(vertexBuffer, 0);
-
 }
 
 void Render()
@@ -154,12 +164,12 @@ void Render()
 		UINT offset = 0;		 	  //시작점
 
 		DeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+		DeviceContext->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		DeviceContext->IASetInputLayout(inputLatout);
 		DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-
 		DeviceContext->RSSetState(Wirte ? rs_FrameMode : NULL);
-		DeviceContext->Draw(6, 0);
+		DeviceContext->DrawIndexed(6 , 0 , 0);
 	}
 	SwapChain->Present(0, 0); //백퍼에 위에 내용 보냄
 }
