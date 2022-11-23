@@ -30,11 +30,6 @@ ID3D11Device* Device = nullptr;
 ID3D11DeviceContext* DeviceContext = nullptr;
 ID3D11RenderTargetView* RTV = nullptr;
 
-ID3D11VertexShader* VertexShader = nullptr;
-ID3D11PixelShader* PixelShader = nullptr;
-ID3D10Blob* VsBlob = nullptr;
-ID3D10Blob* PsBlob = nullptr;
-
 Keyboard* Key = nullptr;
 
 void InitWindow(HINSTANCE hInstance, int nCmdShow)
@@ -164,52 +159,6 @@ void InitDirct3D(HINSTANCE hInstance)
 	//OM Set
 	DeviceContext->OMSetRenderTargets(1, &RTV, NULL);
 
-	//Create Shaders
-	{
-		//Vs Blob
-		hr = D3DX11CompileFromFile
-		(
-			L"Effect.hlsl",	0, 0,
-			"VS", "vs_5_0", //컴파일러 버젼
-			0, 0, 0,
-			&VsBlob,        //컴파일 결과값 저장장소
-			0, 0
-		);
-		assert(SUCCEEDED(hr));
-
-		//Ps Blob 
-		hr = D3DX11CompileFromFile(
-			L"Effect.hlsl", 0, 0, 
-			"PS", "ps_5_0", //컴파일러 버젼
-			0, 0, 0,
-			&PsBlob,		//컴파일 결과값 저장장소
-			0, 0
-		);
-		assert(SUCCEEDED(hr));
-
-		//Vertext Shader
-		hr = Device->CreateVertexShader(
-			VsBlob->GetBufferPointer(), // 시작 위치
-			VsBlob->GetBufferSize(),    // 끝나는 지점
-			NULL,
-			&VertexShader
-		);
-		assert(SUCCEEDED(hr));
-
-		//Pixel Shader
-		hr = Device->CreatePixelShader(
-			PsBlob->GetBufferPointer(), // 시작 위치
-			PsBlob->GetBufferSize(),    // 끝나는 지점
-			NULL,
-			&PixelShader
-		);
-		assert(SUCCEEDED(hr));
-
-		//VS, PS Shader 셋팅 
-		DeviceContext->VSSetShader(VertexShader, 0, 0);
-		DeviceContext->PSSetShader(PixelShader, 0, 0);
-	}
-
 	//Create Viewport
 	{
 		D3D11_VIEWPORT viewPort;
@@ -249,23 +198,16 @@ WPARAM Running()
 	}
 	DestroyScene();
 
-	delete Key;
-	Key = nullptr;
-
+	SafeDelete(Key);
     return msg.wParam;
 }
 
 void Destroy()
 {
-	VertexShader->Release();
-	PixelShader->Release();
-	VsBlob->Release();
-	PsBlob->Release();
-
-	RTV->Release();
-	SwapChain->Release();
-	DeviceContext->Release();
-	Device->Release();
+	SafeRelease(RTV);
+	SafeRelease(SwapChain);
+	SafeRelease(DeviceContext);
+	SafeRelease(Device);
 }
 
 /*------------------Msg Event (Win32API)*/

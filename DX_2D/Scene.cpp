@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include "Device.h"
 
+Shader* shader = nullptr;
+
 ID3D11Buffer* vertexBuffer = NULL;
 ID3D11Buffer* IndexBuffer = NULL;
-ID3D11InputLayout* inputLatout = NULL;
 ID3D11RasterizerState* rs_FrameMode = NULL;
+
 
 struct Vertex
 {
@@ -17,7 +19,7 @@ D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 		"POSITION", //hlsl VS변수에 있는 SemanticName
 		0,
 		DXGI_FORMAT_R32G32B32_FLOAT,
-		0,
+		0,	
 		0,
 		D3D11_INPUT_PER_VERTEX_DATA,
 		0,
@@ -38,6 +40,8 @@ Vertex vertices[4];
 
 void InitScene()
 {
+	shader = new Shader(L"01_Effect.fx");
+
 	//VertexBuffer Setting & Create VertexBuffer
 	{
 		vertices[0].Position = Vector3(-0.5f, -0.5f, 0.0f); //왼 아래
@@ -85,18 +89,6 @@ void InitScene()
 		assert(SUCCEEDED(hr));
 	}
 
-	//Create InputLayout
-	{
-		HRESULT hr = Device->CreateInputLayout(
-			layoutDesc,
-			2, // 정의된 갯수 (Semantic 갯수)
-			VsBlob->GetBufferPointer(),
-			VsBlob->GetBufferSize(),
-			&inputLatout
-		);
-		assert(SUCCEEDED(hr));
-	}
-
 	//RasterizerState
 	{
 		D3D11_RASTERIZER_DESC desc;
@@ -110,10 +102,10 @@ void InitScene()
 
 void DestroyScene()
 {
-	inputLatout->Release();
-	vertexBuffer->Release();
-	IndexBuffer->Release();
-	rs_FrameMode->Release();
+	SafeRelease(vertexBuffer);
+	SafeRelease(IndexBuffer);
+	SafeRelease(rs_FrameMode);
+	SafeDelete(shader);
 }
 
 bool Wirte = false;
@@ -165,11 +157,14 @@ void Render()
 
 		DeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
 		DeviceContext->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-		DeviceContext->IASetInputLayout(inputLatout);
 		DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		DeviceContext->RSSetState(Wirte ? rs_FrameMode : NULL);
-		DeviceContext->DrawIndexed(6 , 0 , 0);
+
+		//DeviceContext->DrawIndexed(6 , 0 , 0);
+
+		//T
+		shader->DrawIndexed(0 , 0 , 6); //변경
 	}
 	SwapChain->Present(0, 0); //백퍼에 위에 내용 보냄
 }

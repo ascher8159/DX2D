@@ -2,12 +2,14 @@
 
 //Window
 #include <Windows.h>
-#include <assert.h>    //검사용
+#include <assert.h>    // 검사용
 
 //STL
-#include <bitset>      //키보드 관련 stl
+#include <bitset>      // 키보드 관련 stl
 #include <vector>
 #include <string>
+#include <algorithm>   // transfrom 
+#include <functional>  // 추후 void* 변수 관련
 using namespace std;
 
 //DX Lib
@@ -20,8 +22,26 @@ using namespace std;
 #pragma comment(lib, "d3dx11.lib")
 #pragma comment(lib, "d3dx10.lib")
 
+//D3D11 fx & Imgui
+#include <d3dx11effect.h>
+#include <d3dcompiler.h>
+#pragma comment(lib, "Effects11d.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+
+#include <imgui.h>
+#include <imguiDx11.h>
+#pragma comment(lib, "ImGui.lib")
+
+#define SafeRelease(p) { if(p) { (p)->Release(); (p) = nullptr; } }
+#define SafeDelete(p) { if(p) { delete (p); (p) = nullptr; } }
+#define SafeDeleteArray(p) { if(p) { delete[] (p); (p) = nullptr; } }
+#define Check(hr) { assert(SUCCEEDED(hr)); }
+
 //System
 #include "System/Keyboard.h"
+#include "Utilities/Path.h"
+#include "Utilities/String.h"
+#include "Renders/Shader.h"
 
 
 //Global Variable
@@ -40,20 +60,9 @@ extern ID3D11Device* Device;				// dx자원을 셋팅용
 extern ID3D11DeviceContext* DeviceContext;  // dx에서 사용하는 HDC(렌더링)
 extern ID3D11RenderTargetView* RTV;         // 실제 화면을 보여주는 용
 
-//https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nn-d3d11-id3d11pixelshader
-extern ID3D11VertexShader* VertexShader;    // vs 단계에서 정점을 제어
-extern ID3D11PixelShader* PixelShader;      // ps 단계에서 픽셸을 제어 
-extern ID3D10Blob* VsBlob;					// 쉐이더 처리값 받는용 Vs용
-extern ID3D10Blob* PsBlob;					// 쉐이더 처리값 받는용 Ps용
-
 //TypeDef
 typedef D3DXVECTOR3 Vector3;
 typedef D3DXVECTOR2 Vector2;
 typedef D3DXMATRIX Matrix;
 typedef D3DXCOLOR Color;
 typedef D3DXQUATERNION Quaternion;
-
-//Macro
-#define SAFE_DELETE(p) { if(p) {delete (p); (p) = NULL;}}
-#define SAFE_DELETE_ARRAY(p) { if(p) {delete[] (p); (p) = NULL;}}
-#define SAFE_RELEASE(p) { if(p) {(p)->Release(); (p) = NULL;}}
