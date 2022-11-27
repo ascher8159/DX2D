@@ -14,7 +14,6 @@ int APIENTRY WinMain(
     Running();                       //4
     Destroy();                       //5
 
-
     //À©µµ¿ì ¹ÝÈ¯
     DestroyWindow(Hwnd);
     UnregisterClass(Title.c_str(), hInstance);
@@ -177,6 +176,10 @@ WPARAM Running()
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
 	
+	// ½Ì±ÛÅæ
+	ImGui::Create(Hwnd, Device, DeviceContext);
+	ImGui::StyleColorsDark(); //Å×¸¶ (¾ÈÇØµµµÊ)
+
 	Key = new Keyboard();
 
 	InitScene();
@@ -192,6 +195,7 @@ WPARAM Running()
 		}
 		else
 		{
+			ImGui::Update();
 			Update();
 			Render();
 		}
@@ -199,6 +203,7 @@ WPARAM Running()
 	DestroyScene();
 
 	SafeDelete(Key);
+	ImGui::Delete();
     return msg.wParam;
 }
 
@@ -213,6 +218,9 @@ void Destroy()
 /*------------------Msg Event (Win32API)*/
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	if (ImGui::WndProc(hwnd, msg, wParam, lParam))
+		return true;
+
 	switch (msg){ 
 		case WM_DESTROY: PostQuitMessage(0); break; 
 	

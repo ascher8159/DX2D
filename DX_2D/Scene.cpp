@@ -7,7 +7,6 @@ ID3D11Buffer* vertexBuffer = NULL;
 ID3D11Buffer* IndexBuffer = NULL;
 ID3D11RasterizerState* rs_FrameMode = NULL;
 
-
 struct Vertex
 {
 	Vector3 Position;
@@ -109,34 +108,49 @@ void DestroyScene()
 }
 
 bool Wirte = false;
+Vector3 color = {0.0f, 0.0f, 0.0f}; //D3DXCOLOR 구조체 사용해도 상관없음
 void Update() 
-{
-	//if (GetAsyncKeyState('1') & 0x8001)
+{	
+	//ImGui
+	{
+		ImGui::Text("%s", "ImGui start");						// 텍스트
+		ImGui::Checkbox("Frame", &Wirte);						// 체크 박스
+		ImGui::ColorEdit3("Color", (float*)&color, 0);			// Color Edit
+		ImGui::Text("%f, %f, %f", color.x, color.y, color.z);
+	}
+
+	// cpu에서 Semantic이름을 통해서 해당값 접근
+	// 1. AsVector로 접근 2. SetFloatVector 통해서 셋팅
+	shader->AsVector("Color")->SetFloatVector(color);
+
+	//RS
 	if(Key->Toggle('1')) Wirte = !Wirte;
 
-	if (Key->Press('A'))
+	//Key
 	{
-		for(int i =0 ; i < ARRAYSIZE(vertices) ; i++)
-			vertices[i].Position.x -= 1e-4f; 
-	}
-	else if (Key->Press('D'))
-	{
-		for (int i = 0; i < ARRAYSIZE(vertices); i++)
-			vertices[i].Position.x += 1e-4f; 
+		if (Key->Press('A'))
+		{
+			for (int i = 0; i < ARRAYSIZE(vertices); i++)
+				vertices[i].Position.x -= 1e-4f;
+		}
+		else if (Key->Press('D'))
+		{
+			for (int i = 0; i < ARRAYSIZE(vertices); i++)
+				vertices[i].Position.x += 1e-4f;
+		}
+
+		if (Key->Press('W'))
+		{
+			for (int i = 0; i < ARRAYSIZE(vertices); i++)
+				vertices[i].Position.y += 1e-4f;
+		}
+		else if (Key->Press('S'))
+		{
+			for (int i = 0; i < ARRAYSIZE(vertices); i++)
+				vertices[i].Position.y -= 1e-4f;
+		}
 	}
 
-	if (Key->Press('W'))
-	{
-		for (int i = 0; i < ARRAYSIZE(vertices); i++)
-			vertices[i].Position.y += 1e-4f;
-	}
-	else if (Key->Press('S'))
-	{
-		for (int i = 0; i < ARRAYSIZE(vertices); i++)
-			vertices[i].Position.y -= 1e-4f;
-	}
-	
-	
 	// Subresouce (CPU방식)
 	D3D11_MAPPED_SUBRESOURCE subResouce;
 	DeviceContext->Map(vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &subResouce);
@@ -161,10 +175,9 @@ void Render()
 
 		DeviceContext->RSSetState(Wirte ? rs_FrameMode : NULL);
 
-		//DeviceContext->DrawIndexed(6 , 0 , 0);
-
-		//T
+		//출력
 		shader->DrawIndexed(0 , 0 , 6); //변경
 	}
-	SwapChain->Present(0, 0); //백퍼에 위에 내용 보냄
+	ImGui::Render(); //ImGui 출력
+	SwapChain->Present(0, 0); //BackBuffer 출력
 }

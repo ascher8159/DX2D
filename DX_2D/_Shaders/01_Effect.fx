@@ -4,13 +4,14 @@
 struct VertexInput
 {
 	float4 Position : Position;
-	float3 Color : Color;
+	float4 Color : Color;
 };
 
 struct VertexOutput
 {
+
 	float4 Position : SV_Position;
-	float3 Color : Color;
+	float4 Color : Color;
 };
 
 //---------------------------------------------------
@@ -32,12 +33,15 @@ VertexOutput VS(VertexInput input)
 float4 PS(VertexOutput input) : SV_Target
 {
 	//return Color;
-	return float4(input.Color, 1);
+	return input.Color;
 }
 
 //---------------------------------------------------
 //-------Pass 번호를 통해서 계산된 값 출력-------------
 //---------------------------------------------------
+// 쉐이더 결과값을 기존 c++ 에서 blob을 통해서 저장해서 사용 한걸 gpu 에서 아예 셋팅
+// technique : pass 관련 관리
+// pass : vs, ps 처리하는 방식
 technique11 T0
 {
 	pass P0
