@@ -5,7 +5,6 @@ Shader* shader = nullptr;
 
 ID3D11Buffer* vertexBuffer = NULL;
 ID3D11Buffer* IndexBuffer = NULL;
-ID3D11RasterizerState* rs_FrameMode = NULL;
 
 struct Vertex
 {
@@ -37,9 +36,13 @@ D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 
 Vertex vertices[4];
 
+//WVP 위한 Matrix
+Matrix World, View, Projection;
+
 void InitScene()
 {
-	shader = new Shader(L"01_Effect.fx");
+	//shader = new Shader(L"01_Effect.fx");
+	shader = new Shader(L"02_WVP.fx");
 
 	//VertexBuffer Setting & Create VertexBuffer
 	{
@@ -88,77 +91,83 @@ void InitScene()
 		assert(SUCCEEDED(hr));
 	}
 
-	//RasterizerState
+	//항등행렬 초기화
+	//D3DXMatrixIdentity(&World);
+	D3DXMatrixIdentity(&View);
+	D3DXMatrixIdentity(&Projection);
+
+	//Model에 배치될 World의 값 (크기와 위치를 가짐)
+	//World를 찍을 View(카메라) 값 (저장할 값, 바라볼 위치, 바라볼 방향, 임의 보조값)
+	//최종 카메라 출력할 Projection선택 및 값 (저장할 값, 바라볼값 정의(Left, Right, Bottom, top), near ,far)
 	{
-		D3D11_RASTERIZER_DESC desc;
-		ZeroMemory(&desc, sizeof(D3D11_RASTERIZER_DESC));
-		desc.FillMode = D3D11_FILL_WIREFRAME;	// 그려주는 방식 (선, 채우기)
-		desc.CullMode = D3D11_CULL_BACK;		// 그림을 자르는 방식 (앞, 뒤)
-		HRESULT hr = Device->CreateRasterizerState(&desc, &rs_FrameMode);
-		assert(SUCCEEDED(hr));
+		D3DXMATRIX S, T;
+		D3DXMatrixScaling(&S, 100, 100, 1.0f);
+		D3DXMatrixTranslation(&T, Width/2, Height/2, 0.0f);
+		World = S * T;
+
+		Vector3 eye = Vector3(0, 0, 0); //카메라 위치
+		Vector3 at  = Vector3(0, 0, 1); //카메라 바라보는 방향
+		Vector3 up  = Vector3(0, 1, 0);  
+		D3DXMatrixLookAtLH(&View, &eye, &(eye + at), &up);
+	
+		D3DXMatrixOrthoOffCenterLH(&Projection, 0, (FLOAT)Width, 0, (FLOAT)Height, -1.0f, +1.0f);
 	}
+
+	cout << World._11 << "  " << World._22 << "  " << World._33 << endl;  
+	cout << World._41 << "  " << World._42 << "  " << World._43 << endl;  
+
+	//Set WVP
+	shader->AsMatrix("World")->SetMatrix(World);
+	shader->AsMatrix("View")->SetMatrix(View);
+	shader->AsMatrix("Projection")->SetMatrix(Projection);
 }
 
 void DestroyScene()
 {
 	SafeRelease(vertexBuffer);
 	SafeRelease(IndexBuffer);
-	SafeRelease(rs_FrameMode);
 	SafeDelete(shader);
 }
 
-bool Wirte = false;
 Vector3 color = {0.0f, 0.0f, 0.0f}; //D3DXCOLOR 구조체 사용해도 상관없음
+Vector3 postiion = Vector3(400, 300, 0);
 void Update() 
 {	
-	//ImGui
-	{
-		ImGui::Text("%s", "ImGui start");						// 텍스트
-		ImGui::Checkbox("Frame", &Wirte);						// 체크 박스
-		ImGui::ColorEdit3("Color", (float*)&color, 0);			// Color Edit
-		ImGui::Text("%f, %f, %f", color.x, color.y, color.z);
-	}
-
-	// cpu에서 Semantic이름을 통해서 해당값 접근
-	// 1. AsVector로 접근 2. SetFloatVector 통해서 셋팅
-	shader->AsVector("Color")->SetFloatVector(color);
-
-	//RS
-	if(Key->Toggle('1')) Wirte = !Wirte;
-
 	//Key
 	{
 		if (Key->Press('A'))
-		{
-			for (int i = 0; i < ARRAYSIZE(vertices); i++)
-				vertices[i].Position.x -= 1e-4f;
-		}
+			postiion.x -= 0.1f;
 		else if (Key->Press('D'))
-		{
-			for (int i = 0; i < ARRAYSIZE(vertices); i++)
-				vertices[i].Position.x += 1e-4f;
-		}
+			postiion.x += 0.1f;
 
 		if (Key->Press('W'))
-		{
-			for (int i = 0; i < ARRAYSIZE(vertices); i++)
-				vertices[i].Position.y += 1e-4f;
-		}
+			postiion.y += 0.1f;
 		else if (Key->Press('S'))
-		{
-			for (int i = 0; i < ARRAYSIZE(vertices); i++)
-				vertices[i].Position.y -= 1e-4f;
-		}
+			postiion.y -= 0.1f;
 	}
 
-	// Subresouce (CPU방식)
-	D3D11_MAPPED_SUBRESOURCE subResouce;
-	DeviceContext->Map(vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &subResouce);
+	//World 응용
 	{
-		//메모리 카피(저장 받을 Subresource, 복사할 시작위치, 크기)
-		memcpy(subResouce.pData, vertices, sizeof(Vertex) * 4);
+		D3DXMATRIX S, T;
+		D3DXMatrixScaling(&S, 100, 100, 1.0f);
+		D3DXMatrixTranslation(&T, postiion.x, postiion.y, 0.0f);
+		World = S * T;
+		shader->AsMatrix("World")->SetMatrix(World);
 	}
-	DeviceContext->Unmap(vertexBuffer, 0);
+	//View 응용
+	{
+		ImGui::SliderFloat("View Position X", &View._41, -800, +800);
+		ImGui::SliderFloat("View(Perspectve 3D) Position Z", &View._43, -800, +800);
+		shader->AsMatrix("View")->SetMatrix(View);
+	}
+	//Projection 응용 (3D)
+	{
+		float fov = 3.141 * 0.5f;
+		float aspect = (float)Width / (float)Height; 
+
+		D3DXMatrixPerspectiveFovLH(&Projection, fov, aspect, 0, 1000);
+		shader->AsMatrix("Projection")->SetMatrix(Projection);
+	}
 }
 
 void Render()
@@ -172,8 +181,6 @@ void Render()
 		DeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
 		DeviceContext->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		DeviceContext->RSSetState(Wirte ? rs_FrameMode : NULL);
 
 		//출력
 		shader->DrawIndexed(0 , 0 , 6); //변경

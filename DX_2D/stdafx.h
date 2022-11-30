@@ -1,4 +1,10 @@
 #pragma once
+//디버그 모드
+#ifdef _DEBUG
+#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
+#endif 
+#include <iostream>
+using namespace std;
 
 //Window
 #include <Windows.h>
@@ -37,6 +43,13 @@ using namespace std;
 #define SafeDeleteArray(p) { if(p) { delete[] (p); (p) = nullptr; } }
 #define Check(hr) { assert(SUCCEEDED(hr)); }
 
+//TypeDef
+typedef D3DXVECTOR3 Vector3;
+typedef D3DXVECTOR2 Vector2;
+typedef D3DXMATRIX Matrix;
+typedef D3DXCOLOR Color;
+typedef D3DXQUATERNION Quaternion;
+
 //System
 #include "System/Keyboard.h"
 #include "Utilities/Path.h"
@@ -60,9 +73,4 @@ extern ID3D11Device* Device;				// dx자원을 셋팅용
 extern ID3D11DeviceContext* DeviceContext;  // dx에서 사용하는 HDC(렌더링)
 extern ID3D11RenderTargetView* RTV;         // 실제 화면을 보여주는 용
 
-//TypeDef
-typedef D3DXVECTOR3 Vector3;
-typedef D3DXVECTOR2 Vector2;
-typedef D3DXMATRIX Matrix;
-typedef D3DXCOLOR Color;
-typedef D3DXQUATERNION Quaternion;
+
