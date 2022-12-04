@@ -112,29 +112,47 @@ void DestroyScene()
 	SafeDelete(shader);
 }
 
-Vector3 postiion = Vector3(400, 300, 0);
+Vector3 position = Vector3(400, 300, 0);
+Vector3 position2 = Vector3(100, 300, 0);
 void Update() 
 {	
-	//Key
+	//Key (World 1)
 	{
 		if (Key->Press('A'))
-			postiion.x -= 0.1f;
+			position.x -= 0.1f;
 		else if (Key->Press('D'))
-			postiion.x += 0.1f;
+			position.x += 0.1f;
 
 		if (Key->Press('W'))
-			postiion.y += 0.1f;
+			position.y += 0.1f;
 		else if (Key->Press('S'))
-			postiion.y -= 0.1f;
+			position.y -= 0.1f;
 
 		D3DXMATRIX S, T;
 		D3DXMatrixScaling(&S, 100, 100, 1.0f);
-		D3DXMatrixTranslation(&T, postiion.x, postiion.y, 0.0f);
+		D3DXMatrixTranslation(&T, position.x, position.y, 0.0f);
 		World1 = S * T;
 	}
 	
+	//Key (World 2)
+	{
+		if (Key->Press(VK_LEFT))
+			position2.x -= 0.1f;
+		else if (Key->Press(VK_RIGHT))
+			position2.x += 0.1f;
+
+		if (Key->Press(VK_UP))
+			position2.y += 0.1f;
+		else if (Key->Press(VK_DOWN))
+			position2.y -= 0.1f;
+
+		D3DXMATRIX S, T;
+		D3DXMatrixScaling(&S, 100, 100, 1.0f);
+		D3DXMatrixTranslation(&T, position2.x, position2.y, 0.0f);
+		World2 = S * T;
+	}
+
 	//Set WVP
-	shader->AsMatrix("World")->SetMatrix(World1);
 	shader->AsMatrix("View")->SetMatrix(View);
 	shader->AsMatrix("Projection")->SetMatrix(Projection);
 }
@@ -152,7 +170,13 @@ void Render()
 		DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		//출력
+		shader->AsMatrix("World")->SetMatrix(World1);
+		shader->AsVector("Color")->SetFloatVector(Color(1, 0, 1, 1));
 		shader->DrawIndexed(0 , 0 , 6); //변경
+
+		shader->AsMatrix("World")->SetMatrix(World2);
+		shader->AsVector("Color")->SetFloatVector(Color(1, 1, 0, 1));
+		shader->DrawIndexed(0, 0, 6); //변경
 	}
 	ImGui::Render(); //ImGui 출력
 	SwapChain->Present(0, 0); //BackBuffer 출력
