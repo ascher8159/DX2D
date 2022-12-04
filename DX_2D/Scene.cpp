@@ -37,7 +37,7 @@ D3D11_INPUT_ELEMENT_DESC layoutDesc[] = {
 Vertex vertices[4];
 
 //WVP 위한 Matrix
-Matrix World, View, Projection;
+Matrix World1, World2, View, Projection;
 
 void InitScene()
 {
@@ -92,34 +92,17 @@ void InitScene()
 	}
 
 	//항등행렬 초기화
-	//D3DXMatrixIdentity(&World);
 	D3DXMatrixIdentity(&View);
 	D3DXMatrixIdentity(&Projection);
 
-	//Model에 배치될 World의 값 (크기와 위치를 가짐)
-	//World를 찍을 View(카메라) 값 (저장할 값, 바라볼 위치, 바라볼 방향, 임의 보조값)
-	//최종 카메라 출력할 Projection선택 및 값 (저장할 값, 바라볼값 정의(Left, Right, Bottom, top), near ,far)
+	//카메라 셋팅
 	{
-		D3DXMATRIX S, T;
-		D3DXMatrixScaling(&S, 100, 100, 1.0f);
-		D3DXMatrixTranslation(&T, Width/2, Height/2, 0.0f);
-		World = S * T;
-
 		Vector3 eye = Vector3(0, 0, 0); //카메라 위치
 		Vector3 at  = Vector3(0, 0, 1); //카메라 바라보는 방향
 		Vector3 up  = Vector3(0, 1, 0);  
 		D3DXMatrixLookAtLH(&View, &eye, &(eye + at), &up);
-	
 		D3DXMatrixOrthoOffCenterLH(&Projection, 0, (FLOAT)Width, 0, (FLOAT)Height, -1.0f, +1.0f);
 	}
-
-	cout << World._11 << "  " << World._22 << "  " << World._33 << endl;  
-	cout << World._41 << "  " << World._42 << "  " << World._43 << endl;  
-
-	//Set WVP
-	shader->AsMatrix("World")->SetMatrix(World);
-	shader->AsMatrix("View")->SetMatrix(View);
-	shader->AsMatrix("Projection")->SetMatrix(Projection);
 }
 
 void DestroyScene()
@@ -129,7 +112,6 @@ void DestroyScene()
 	SafeDelete(shader);
 }
 
-Vector3 color = {0.0f, 0.0f, 0.0f}; //D3DXCOLOR 구조체 사용해도 상관없음
 Vector3 postiion = Vector3(400, 300, 0);
 void Update() 
 {	
@@ -144,30 +126,17 @@ void Update()
 			postiion.y += 0.1f;
 		else if (Key->Press('S'))
 			postiion.y -= 0.1f;
-	}
 
-	//World 응용
-	{
 		D3DXMATRIX S, T;
 		D3DXMatrixScaling(&S, 100, 100, 1.0f);
 		D3DXMatrixTranslation(&T, postiion.x, postiion.y, 0.0f);
-		World = S * T;
-		shader->AsMatrix("World")->SetMatrix(World);
+		World1 = S * T;
 	}
-	//View 응용
-	{
-		ImGui::SliderFloat("View Position X", &View._41, -800, +800);
-		ImGui::SliderFloat("View(Perspectve 3D) Position Z", &View._43, -800, +800);
-		shader->AsMatrix("View")->SetMatrix(View);
-	}
-	//Projection 응용 (3D)
-	{
-		float fov = 3.141 * 0.5f;
-		float aspect = (float)Width / (float)Height; 
-
-		D3DXMatrixPerspectiveFovLH(&Projection, fov, aspect, 0, 1000);
-		shader->AsMatrix("Projection")->SetMatrix(Projection);
-	}
+	
+	//Set WVP
+	shader->AsMatrix("World")->SetMatrix(World1);
+	shader->AsMatrix("View")->SetMatrix(View);
+	shader->AsMatrix("Projection")->SetMatrix(Projection);
 }
 
 void Render()
