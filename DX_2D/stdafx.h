@@ -8,7 +8,7 @@ using namespace std;
 
 //Window
 #include <Windows.h>
-#include <assert.h>    // 검사용
+#include <assert.h>		// 검사용
 
 //STL
 #include <bitset>      // 키보드 관련 stl
@@ -38,6 +38,13 @@ using namespace std;
 #include <imguiDx11.h>
 #pragma comment(lib, "ImGui.lib")
 
+//System
+#include "System/Keyboard.h"
+#include "Utilities/Path.h"
+#include "Utilities/String.h"
+#include "Renders/Shader.h"
+
+//Macro
 #define SafeRelease(p) { if(p) { (p)->Release(); (p) = nullptr; } }
 #define SafeDelete(p) { if(p) { delete (p); (p) = nullptr; } }
 #define SafeDeleteArray(p) { if(p) { delete[] (p); (p) = nullptr; } }
@@ -49,13 +56,6 @@ typedef D3DXVECTOR2 Vector2;
 typedef D3DXMATRIX Matrix;
 typedef D3DXCOLOR Color;
 typedef D3DXQUATERNION Quaternion;
-
-//System
-#include "System/Keyboard.h"
-#include "Utilities/Path.h"
-#include "Utilities/String.h"
-#include "Renders/Shader.h"
-
 
 //Global Variable
 //--윈도우

@@ -5,15 +5,14 @@ class Rect
 public:
 	Rect(Shader* shader);
 	Rect(Shader* shader, Vector2 position, Vector2 scale, D3DXCOLOR color = D3DXCOLOR(1,1,1,1));
-	~Rect();
+	virtual ~Rect(); // 가상함수 (상속)
 	
 	void Update(Matrix& V, Matrix P);
 	void Render();
-
+	
 private:
 	void Initialize();
 	void CreateBuffer();
-
 	void Apply();
 
 public:
@@ -29,12 +28,13 @@ public:
 	FORCEINLINE	D3DXVECTOR2 Position() { return position; }
 	FORCEINLINE D3DXVECTOR2 Scale() { return scale; }
 	FORCEINLINE D3DXCOLOR Color() { return color; }
-	FORCEINLINE	UINT PASS() { return pass; }
+	FORCEINLINE	UINT &PASS() { return pass; }
 
 private:
 	struct Vertex
 	{
 		Vector3 Position;
+		D3DXCOLOR color;
 	};
 
 private:
@@ -51,9 +51,9 @@ private:
 
 	UINT pass = 0;
 
+	// shader->AsMatrix()를 계속 shader를 통해서 호출 하는건 자원 낭비 심함
 	ID3DX11EffectMatrixVariable* sWorld;
 	ID3DX11EffectMatrixVariable* sView;
 	ID3DX11EffectMatrixVariable* sProjection;
-
 	ID3DX11EffectVectorVariable* sColor;
 };

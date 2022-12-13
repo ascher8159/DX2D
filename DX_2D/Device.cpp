@@ -179,7 +179,8 @@ WPARAM Running()
 	// ½Ì±ÛÅæ
 	ImGui::Create(Hwnd, Device, DeviceContext);
 	ImGui::StyleColorsDark(); //Å×¸¶ (¾ÈÇØµµµÊ)
-
+	
+	//System
 	Key = new Keyboard();
 
 	InitScene();

@@ -41,6 +41,11 @@ void Rect::CreateBuffer()
 		vertices[1].Position = Vector3(-0.5f, +0.5f, 0.0f);
 		vertices[2].Position = Vector3(+0.5f, -0.5f, 0.0f);
 		vertices[3].Position = Vector3(+0.5f, +0.5f, 0.0f);
+
+		vertices[0].color = D3DXCOLOR(0.0f, 0.0f, 0.5f, 1);
+		vertices[1].color = D3DXCOLOR(0.0f, 0.5f, 0.5f, 1);
+		vertices[2].color = D3DXCOLOR(0.0f, 0.0f, 0.5f, 1);
+		vertices[3].color = D3DXCOLOR(0.0f, 0.5f, 0.5f, 1);
 	}
 
 	//Create Vertex Buffer
@@ -97,7 +102,6 @@ void Rect::Update(Matrix& V, Matrix P)
 {
 	this->V = V;
 	this->P = P;
-
 }
 
 void Rect::Render()
@@ -110,7 +114,6 @@ void Rect::Render()
 	DeviceContext->IASetVertexBuffers(0, 1, &VertexBuffer, &stride, &offset);
 	DeviceContext->IASetIndexBuffer(IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 
 	shader->DrawIndexed(0, pass, 6);
 }
