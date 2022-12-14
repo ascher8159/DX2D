@@ -70,6 +70,8 @@ void Update()
 
 	//FPS
 	ImGui::Text("%.1f", ImGui::GetIO().Framerate);
+	ImGui::Text("FPS : %.1f", Time::Get()->FPS());
+	ImGui::Text("Running Time : %.1f", Time::Get()->Running());
 
 	BackGround->Update(View, Projection);
 	rect->Update(View, Projection);

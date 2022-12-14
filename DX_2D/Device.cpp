@@ -182,6 +182,8 @@ WPARAM Running()
 	
 	//System
 	Key = new Keyboard();
+	Time::Create();
+	Time::Get()->Start();
 
 	InitScene();
 	while (true)
@@ -196,6 +198,7 @@ WPARAM Running()
 		}
 		else
 		{
+			Time::Get()->Update();
 			ImGui::Update();
 			Update();
 			Render();
@@ -203,6 +206,8 @@ WPARAM Running()
 	}
 	DestroyScene();
 
+
+	Time::Delete();
 	SafeDelete(Key);
 	ImGui::Delete();
     return msg.wParam;

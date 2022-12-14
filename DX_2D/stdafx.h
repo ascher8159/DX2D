@@ -9,6 +9,7 @@ using namespace std;
 //Window
 #include <Windows.h>
 #include <assert.h>		// 검사용
+#include <mutex>		// thread 임계구역 구별용 (Time)
 
 //STL
 #include <bitset>      // 키보드 관련 stl
@@ -40,6 +41,7 @@ using namespace std;
 
 //System
 #include "System/Keyboard.h"
+#include "System/Time.h"
 #include "Utilities/Path.h"
 #include "Utilities/String.h"
 #include "Renders/Shader.h"
@@ -49,6 +51,7 @@ using namespace std;
 #define SafeDelete(p) { if(p) { delete (p); (p) = nullptr; } }
 #define SafeDeleteArray(p) { if(p) { delete[] (p); (p) = nullptr; } }
 #define Check(hr) { assert(SUCCEEDED(hr)); }
+#define SAFE_DELETE(p) { if(p) { delete (p); (p) = nullptr; } }
 
 //TypeDef
 typedef D3DXVECTOR3 Vector3;
