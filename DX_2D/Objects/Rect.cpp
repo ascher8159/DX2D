@@ -118,10 +118,18 @@ void Rect::Render()
 	shader->DrawIndexed(0, pass, 6);
 }
 
-void Rect::Position(float x, float y){	Position(D3DXVECTOR2(x, y)); }
+void Rect::Position(float x, float y){	
+	Position(D3DXVECTOR2(x, y));
+}
 void Rect::Position(D3DXVECTOR2& vec){	position = vec; }
-void Rect::Scale(float x, float y){	Scale(D3DXVECTOR2(x, y)); }
+
+void Rect::Scale(float x, float y){ 
+	Scale(D3DXVECTOR2(x, y));
+}
 void Rect::Scale(D3DXVECTOR2& vec){	scale = vec; }
-void Rect::Color(float r, float g, float b, float a){	Color(D3DXCOLOR(r, g, b, a));}
-void Rect::Color(D3DXCOLOR& vec){	color = vec;}
+
+void Rect::Color(float r, float g, float b, float a){ 
+	Color(D3DXCOLOR(r, g, b, a));
+}
+void Rect::Color(D3DXCOLOR& vec){color = vec;}
 

@@ -1,8 +1,8 @@
 #pragma once
 //디버그 모드
-#ifdef _DEBUG
-#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
-#endif 
+//#ifdef _DEBUG
+//#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
+//#endif 
 #include <iostream>
 using namespace std;
 

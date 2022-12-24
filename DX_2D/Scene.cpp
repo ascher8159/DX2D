@@ -64,9 +64,13 @@ void Update()
 
 	if (Key->Press('A'))
 		R_c->MoveLeft();
-
 	else if (Key->Press('D'))
 		R_c->MoveRight();
+
+	if (Key->Down(VK_SPACE))
+		R_c->Jump();
+	else if (Key->Up(VK_SPACE))
+		R_c->StopJump();
 
 	//FPS
 	ImGui::Text("%.1f", ImGui::GetIO().Framerate);

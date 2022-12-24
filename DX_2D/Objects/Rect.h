@@ -7,7 +7,7 @@ public:
 	Rect(Shader* shader, Vector2 position, Vector2 scale, D3DXCOLOR color = D3DXCOLOR(1,1,1,1));
 	virtual ~Rect(); // 가상함수 (상속)
 	
-	void Update(Matrix& V, Matrix P);
+	virtual void Update(Matrix& V, Matrix P);
 	void Render();
 	
 private:
@@ -43,10 +43,9 @@ private:
 	ID3D11Buffer* VertexBuffer = nullptr;
 	ID3D11Buffer* IndexBuffer = nullptr;
 
-	Vector2 position;
 	Vector2 scale;
 	D3DXCOLOR color;
-
+	
 	Matrix W, V, P;
 
 	UINT pass = 0;
@@ -56,4 +55,6 @@ private:
 	ID3DX11EffectMatrixVariable* sView;
 	ID3DX11EffectMatrixVariable* sProjection;
 	ID3DX11EffectVectorVariable* sColor;
+
+	Vector2 position;
 };
