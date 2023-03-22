@@ -1,85 +1,87 @@
 #include "stdafx.h"
-#include "Device.h"
+#include "System/Device.h"
 
 #include "Objects/Rect.h"
 #include "Objects/Rect_Control.h"
 
-Rect* BackGround;
-Rect* rect;
-Rect_Control* R_c;
-
 Shader* shader = nullptr;
 
 //WVP 위한 Matrix
-Matrix View, Projection;
+Matrix V, P;
+
+struct Vertex
+{
+	Vector3 Position;
+	Vector2 UV;			//TexCoord 이미지 좌표 값이라고도 부름
+}vertices[6];
+
+ID3D11Buffer* vertexBuffer = nullptr;
+ID3D11ShaderResourceView* srv;
 
 void InitScene()
 {
-	shader = new Shader(L"02_WVP.fx");
+	shader = new Shader(L"03_Texture.fx");
+	
+	//Vertices Setting
+	{
+		vertices[0].Position = Vector3(-0.5f, -0.5f, 0.0f);
+		vertices[1].Position = Vector3(-0.5f, +0.5f, 0.0f);
+		vertices[2].Position = Vector3(+0.5f, -0.5f, 0.0f);
+		vertices[3].Position = Vector3(+0.5f, -0.5f, 0.0f);
+		vertices[4].Position = Vector3(-0.5f, +0.5f, 0.0f);
+		vertices[5].Position = Vector3(+0.5f, +0.5f, 0.0f);
 
-	BackGround = new Rect(shader);
-	BackGround->Position((float)Width * 0.5f, (float)Height * 0.5f);
-	BackGround->Scale((float)Width, (float)Height);
-	BackGround->Color(0, 1, 1, 1);
+		vertices[0].UV = Vector2(0, 1);
+		vertices[1].UV = Vector2(0, 0);
+		vertices[2].UV = Vector2(1, 1);
+		vertices[3].UV = Vector2(1, 1);
+		vertices[4].UV = Vector2(0, 0);
+		vertices[5].UV = Vector2(1, 0);
+	}
+		
+	//Vertex Setting
+	{
+		D3D11_BUFFER_DESC desc;
+		ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.ByteWidth = sizeof(Vertex) * 6;
+		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	
+		D3D11_SUBRESOURCE_DATA data;
+		ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
+		data.pSysMem = vertices;
+		
+		Check(Device->CreateBuffer(&desc, &data, &vertexBuffer));
+	}
 
-	rect = new Rect(shader);
-	rect->Position(200, 500);
-	rect->Scale(50, 100);
-	rect->Color(1, 0, 1, 1);
-	rect->PASS() = 1;
-
-	R_c = new Rect_Control(shader);
-	R_c->Position((float)Width * 0.5f, (float)Height * 0.5f);
-	R_c->Scale(100, 100);
-	R_c->Color(1, 1, 1, 1);
+	//Create SRV (Image)
+	{
+		Check(D3DX11CreateShaderResourceViewFromFile
+		(
+			Device,
+			L"../../_Textures/Yukari.png",
+			nullptr,
+			nullptr,
+			&srv,
+			nullptr
+		));
+	}
 }
 
 void DestroyScene()
 {
 	SafeDelete(shader);
-
-	SafeDelete(BackGround);
-	SafeDelete(rect);
-	SafeDelete(R_c);
+	
+	SafeRelease(vertexBuffer);
+	SafeRelease(srv);
 }
 
-void Update() 
-{	
-	//Camera
-	Vector3 eye = Vector3(0, 0, 0); 
-	Vector3 at = Vector3(0, 0, 1);
-	Vector3 up = Vector3(0, 1, 0);
-	D3DXMatrixLookAtLH(&View, &eye, &(eye + at), &up);
-	D3DXMatrixOrthoOffCenterLH(&Projection, 0, (FLOAT)Width, 0, (FLOAT)Height, -1.0f, +1.0f);
-	
-	//Test Pass
-	static bool check = false;
-	ImGui::Checkbox("Rect Pass", &check);
-	check ? rect->PASS() = 0 : rect->PASS() = 1;
-
-	//Test speed
-	float mvSpeed = R_c->Movespeed();
-	ImGui::SliderFloat("MoveSpeed", &mvSpeed, 0.001f, 1.0f);
-	R_c->Movespeed(mvSpeed);
-
-	if (Key->Press('A'))
-		R_c->MoveLeft();
-	else if (Key->Press('D'))
-		R_c->MoveRight();
-
-	if (Key->Down(VK_SPACE))
-		R_c->Jump();
-	else if (Key->Up(VK_SPACE))
-		R_c->StopJump();
-
+void Update()
+{
 	//FPS
 	ImGui::Text("%.1f", ImGui::GetIO().Framerate);
 	ImGui::Text("FPS : %.1f", Time::Get()->FPS());
 	ImGui::Text("Running Time : %.1f", Time::Get()->Running());
-
-	BackGround->Update(View, Projection);
-	rect->Update(View, Projection);
-	R_c->Update(View, Projection);
 }
 
 void Render()
@@ -87,12 +89,45 @@ void Render()
 	D3DXCOLOR bgcolor = D3DXCOLOR(0.22f, 0.27f, 0.44f, 1.0f);   // 배경색
 	DeviceContext->ClearRenderTargetView(RTV, (float*)bgcolor); //앞
 	{
-		BackGround->Render();
-		rect->Render();
+		Matrix W, S, T;
+		Vector3 eye = Vector3(0, 0, 0);
+		Vector3 at = Vector3(0, 0, 1);
+		Vector3 up = Vector3(0, 1, 0);
 
-		R_c->PASS() = 1;
-		R_c->Render();
+		// NDC & Camera Setting
+		{
+			D3DXMatrixScaling(&S, 300, 300, 1);
+			D3DXMatrixTranslation(&T, Width * 0.5f, Height * 0.5f, 0);
+			W = S * T;
+
+			D3DXMatrixLookAtLH(&V, &eye, &(eye + at), &up);
+			D3DXMatrixOrthoOffCenterLH(&P, 0, (FLOAT)Width, 0, (FLOAT)Height, -1.0f, +1.0f);
+		}
+
+		//Shader Setting
+		{
+			shader->AsMatrix("World")->SetMatrix(W);
+			shader->AsMatrix("View")->SetMatrix(V);
+			shader->AsMatrix("Projection")->SetMatrix(P);
+			shader->AsSRV("TextureMap")->SetResource(srv);
+		}
+
+		UINT stride = sizeof(Vertex);
+		UINT offset = 0;
+		DeviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+		DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		
+		static UINT pass = 0;
+		static UINT select = 0;
+		ImGui::SliderInt("Pass Setting", (int*)&pass, 0, shader->PassCount()-1);
+		ImGui::SliderInt("Sampler Setting", (int*)&select, 0, 1);
+		shader->AsScalar("select")->SetInt(select);
+
+		shader->Draw(0, pass, 6);
 	}
 	ImGui::Render(); //ImGui 출력
 	SwapChain->Present(0, 0); //BackBuffer 출력
 }
+
+
+

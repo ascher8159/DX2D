@@ -9,7 +9,6 @@ struct VertexInput
 
 struct VertexOutput
 {
-
 	float4 Position : SV_Position;
 	float4 Color : Color;
 };
@@ -29,7 +28,7 @@ VertexOutput VS(VertexInput input)
 //---------------------------------------------------
 //------------------Pixel 처리 하는곳-----------------
 //---------------------------------------------------
-//float4 Color = float4(1, 0, 0, 1);
+float4 Color = float4(1, 0, 0, 1);
 float4 PS(VertexOutput input) : SV_Target
 {
 	//return Color;

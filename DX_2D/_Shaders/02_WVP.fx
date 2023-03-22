@@ -35,17 +35,17 @@ VertexOutput VS(VertexInput input)
 //---------------------------------------------------
 //------------------Pixel 처리 하는곳-----------------
 //---------------------------------------------------
-//정점 색상
-float4 Diffuse_PS(VertexOutput input) : SV_Target
-{
-    return float4(input.Color);
-}
-
 //Color 색상
 float4 Color = float4(1, 0, 0, 1);
 float4 PS(VertexOutput input) : SV_Target
 {
     return Color;
+}
+
+//정점 색상
+float4 Diffuse_PS(VertexOutput input) : SV_Target
+{
+    return float4(input.Color);
 }
 
 RasterizerState RS
@@ -62,16 +62,15 @@ RasterizerState RS
 
 technique11 T0
 {
-	pass P0
+    pass P0
+    {
+        SetVertexShader(CompileShader(vs_5_0, VS()));
+        SetPixelShader(CompileShader(ps_5_0, PS()));
+    }
+
+	pass P1
 	{
 		SetVertexShader(CompileShader(vs_5_0, VS()));
         SetPixelShader(CompileShader(ps_5_0, Diffuse_PS()));
-    }
-
-    pass P1
-    {
-        //SetRasterizerState(RS);
-        SetVertexShader(CompileShader(vs_5_0, VS()));
-        SetPixelShader(CompileShader(ps_5_0, PS()));
     }
 }

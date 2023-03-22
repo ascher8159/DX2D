@@ -20,7 +20,7 @@ int APIENTRY WinMain(
 
 	return 0;
 }
-
+D3D11_SAMPLER_DESC;
 HWND Hwnd = nullptr;
 wstring Title = L"DX_2D";
 

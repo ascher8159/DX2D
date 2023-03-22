@@ -28,7 +28,7 @@ void Rect::Initialize()
 	D3DXMatrixIdentity(&P);
 
 	sWorld = shader->AsMatrix("World");
-	sView = shader->AsMatrix("View");
+	sView =	shader->AsMatrix("View");
 	sProjection = shader->AsMatrix("Projection");
 	sColor = shader->AsVector("Color");
 }
